@@ -12,6 +12,7 @@
         <h2>Edit Category</h2>
         <form th:action="@{/categories/edit/{id}(id=${category.id})}" th:object="${category}" method="post"
             class="form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" th:field="*{id}">
             <div class="form-group mb-3">
                 <label for="name">Name:</label>

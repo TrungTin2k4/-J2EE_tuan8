@@ -11,6 +11,7 @@
     <div layout:fragment="content" class="container body-content">
         <h2>Add Category</h2>
         <form th:action="@{/categories/save}" th:object="${category}" method="post" class="form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <div class="form-group mb-3">
                 <label for="name">Name:</label>
                 <input class="form-control" type="text" th:field="*{name}" id="name" placeholder="Category Name"

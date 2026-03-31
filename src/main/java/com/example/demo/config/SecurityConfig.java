@@ -7,7 +7,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,18 +35,24 @@ public class SecurityConfig {
         http
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/error").permitAll()
+                        .requestMatchers("/login", "/register", "/error", "/images/**").permitAll()
                         .requestMatchers("/products/add", "/products/save", "/products/edit/**", "/products/delete/**")
                         .hasRole("ADMIN")
-                        .requestMatchers("/products")
+                        .requestMatchers("/categories/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers("/products", "/home", "/")
                         .hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/order")
-                        .hasRole("USER")
+                        .requestMatchers("/cart/**", "/order/**")
+                        .hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
+                        .loginPage("/login")
+                        .failureUrl("/login?error")
                         .defaultSuccessUrl("/home", true)
                         .permitAll())
-                .logout(Customizer.withDefaults());
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll());
 
         return http.build();
     }

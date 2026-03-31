@@ -1,15 +1,39 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.Order;
+import com.example.demo.service.CartService;
+import com.example.demo.service.OrderService;
+import jakarta.servlet.http.HttpSession;
 import java.security.Principal;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@RestController
+@Controller
+@RequestMapping("/order")
 public class OrderController {
+    @Autowired
+    private OrderService orderService;
 
-    @GetMapping("/order")
-    public String order(Principal principal) {
-        return "Order page for " + principal.getName();
+    @Autowired
+    private CartService cartService;
+
+    @PostMapping("/checkout")
+    public String checkout(Principal principal, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (cartService.getCartItems(session).isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng đang trống.");
+            return "redirect:/cart";
+        }
+
+        Order order = orderService.checkout(principal.getName(), cartService.getCartItems(session));
+        cartService.clearCart(session);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công.");
+        redirectAttributes.addFlashAttribute("placedOrderId", order.getId());
+        redirectAttributes.addFlashAttribute("placedOrderTotal", order.getTotalAmount());
+        return "redirect:/cart";
     }
 }

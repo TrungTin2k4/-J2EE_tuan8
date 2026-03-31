@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -9,11 +9,31 @@
 </head>
 
 <body>
-    <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
-        <div style="padding-left: 40px">
-            <a class="navbar-brand" th:href="@{/products}">Home</a>
-            <a class="navbar-brand" th:href="@{/products/add}">Products</a>
-            <a class="navbar-brand" th:href="@{/categories}">Categories</a>
+    <nav class="navbar navbar-expand-lg bg-dark border-bottom border-body" data-bs-theme="dark">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" th:href="@{/products}">J2EE Shop</a>
+            <div class="navbar-nav ms-4 me-auto gap-2" th:if="${isAuthenticated}">
+                <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
+                <a class="nav-link" th:if="${isAdmin}" th:href="@{/products/add}">Thêm sản phẩm</a>
+                <a class="nav-link" th:if="${isAdmin}" th:href="@{/categories}">Danh mục</a>
+                <a class="nav-link" th:href="@{/cart}">Giỏ hàng (<span th:text="${cartCount}"></span>)</a>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <div th:if="${isAuthenticated}" class="text-white text-end me-2">
+                    <div class="fw-semibold" th:text="${currentUsername}"></div>
+                    <span class="badge" th:classappend="${isAdmin} ? ' text-bg-danger' : ' text-bg-primary'"
+                        th:text="${currentRoleLabel}"></span>
+                </div>
+
+                <a th:unless="${isAuthenticated}" th:href="@{/login}" class="btn btn-outline-light btn-sm">Đăng nhập</a>
+                <a th:unless="${isAuthenticated}" th:href="@{/register}" class="btn btn-warning btn-sm">Đăng ký</a>
+
+                <form th:if="${isAuthenticated}" th:action="@{/logout}" method="post" class="m-0">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Đăng xuất</button>
+                </form>
+            </div>
         </div>
     </nav>
     <div layout:fragment="content" class="container body-content">

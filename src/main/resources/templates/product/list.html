@@ -1,46 +1,131 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{_layout}">
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{_layout}">
+
 <head>
     <meta charset="UTF-8">
-    <title>Sản Phẩm</title>
+    <title>Sản phẩm</title>
 </head>
+
 <body>
-<div layout:fragment="content" class="container body-content">
-    <a th:href="@{/products/add}" class="btn btn-primary">Create New Product</a>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Name</th>
-            <th scope="col">Image</th>
-            <th scope="col">Price</th>
-            <th scope="col">Category Name</th>
-            <th scope="col"></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="product : ${products}">
-            <th scope="row" th:text="${product.id}"></th>
-            <td th:text="${product.name}"></td>
-            <td>
-                <img height="120" width="150" th:src="${product.image}" alt="Product Image">
-            </td>
-            <td th:text="${product.price}"></td>
-            <td th:text="${product.category != null ? product.category.name : ''}"></td>
-            <td>
-                <form th:action="@{/products/edit/{id}(id=${product.id})}" method="get" style="display:inline;">
-                    <button type="submit" class="btn btn-secondary">Edit</button>
-                </form>
-                <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post" style="display:inline;">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+    <div layout:fragment="content" class="container py-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="mb-1">Danh sách sản phẩm</h2>
+                <p class="text-muted mb-0">Tìm kiếm theo tên, lọc danh mục, sắp xếp giá và phân trang 5 sản phẩm mỗi trang.</p>
+                <div class="mt-2">
+                    <span class="badge" th:classappend="${isAdmin} ? ' text-bg-danger' : ' text-bg-primary'"
+                        th:text="|Bạn đang đăng nhập với quyền ${currentRoleLabel}|"></span>
+                </div>
+            </div>
+            <a th:if="${isAdmin}" th:href="@{/products/add}" class="btn btn-primary">Thêm sản phẩm</a>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+
+        <form th:action="@{/products}" method="get" class="row g-3 p-3 rounded border bg-light mb-4">
+            <div class="col-md-4">
+                <label for="keyword" class="form-label">Từ khóa</label>
+                <input type="text" id="keyword" name="keyword" class="form-control" th:value="${keyword}"
+                    placeholder="Nhập tên sản phẩm">
+            </div>
+            <div class="col-md-3">
+                <label for="categoryId" class="form-label">Danh mục</label>
+                <select id="categoryId" name="categoryId" class="form-select">
+                    <option value="">Tất cả danh mục</option>
+                    <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"
+                        th:selected="${categoryId != null and category.id == categoryId}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Sắp xếp</label>
+                <select id="sort" name="sort" class="form-select">
+                    <option value="">Mặc định</option>
+                    <option value="price_asc" th:selected="${sort == 'price_asc'}">Giá tăng dần</option>
+                    <option value="price_desc" th:selected="${sort == 'price_desc'}">Giá giảm dần</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-dark w-100">Lọc</button>
+                <a th:href="@{/products}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">Hiển thị <strong th:text="${products.size()}"></strong> sản phẩm trong trang hiện tại.</span>
+            <a th:href="@{/cart}" class="btn btn-outline-success">Xem giỏ hàng</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Hình ảnh</th>
+                        <th>Giá</th>
+                        <th>Danh mục</th>
+                        <th>Giỏ hàng</th>
+                        <th th:if="${isAdmin}">Quản lý</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(products)}">
+                        <td th:colspan="${isAdmin ? 7 : 6}" class="text-center py-4">Không tìm thấy sản phẩm phù hợp.</td>
+                    </tr>
+                    <tr th:each="product : ${products}">
+                        <td th:text="${product.id}"></td>
+                        <td class="fw-semibold" th:text="${product.name}"></td>
+                        <td>
+                            <img th:if="${product.image != null and !#strings.isEmpty(product.image)}" th:src="${product.image}"
+                                alt="Product image" width="130" height="95" class="rounded border object-fit-cover">
+                            <span th:unless="${product.image != null and !#strings.isEmpty(product.image)}" class="text-muted">Chưa có ảnh</span>
+                        </td>
+                        <td th:text="${product.price} + ' VND'"></td>
+                        <td th:text="${product.category != null ? product.category.name : ''}"></td>
+                        <td style="min-width: 180px;">
+                            <form th:action="@{/cart/add}" method="post" class="d-flex flex-column gap-2">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input type="hidden" name="productId" th:value="${product.id}">
+                                <input type="hidden" name="keyword" th:value="${keyword}">
+                                <input type="hidden" name="categoryId" th:value="${categoryId}">
+                                <input type="hidden" name="sort" th:value="${sort}">
+                                <input type="hidden" name="page" th:value="${currentPage}">
+                                <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm">
+                                <button type="submit" class="btn btn-success btn-sm">Thêm vào giỏ</button>
+                            </form>
+                        </td>
+                        <td th:if="${isAdmin}" style="min-width: 160px;">
+                            <div class="d-flex flex-column gap-2">
+                                <form th:action="@{/products/edit/{id}(id=${product.id})}" method="get">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Sửa</button>
+                                </form>
+                                <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Xóa</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4">
+            <div>
+                Trang <strong th:text="${currentPage + 1}"></strong> / <strong th:text="${displayTotalPages}"></strong>
+            </div>
+            <div class="btn-group">
+                <a class="btn btn-outline-primary"
+                    th:href="${productPage.hasPrevious()} ? @{/products(page=${currentPage - 1}, keyword=${keyword}, categoryId=${categoryId}, sort=${sort})} : @{/products(page=${currentPage}, keyword=${keyword}, categoryId=${categoryId}, sort=${sort})}"
+                    th:classappend="${!productPage.hasPrevious()} ? ' disabled' : ''">Previous</a>
+                <a class="btn btn-outline-primary"
+                    th:href="${productPage.hasNext()} ? @{/products(page=${currentPage + 1}, keyword=${keyword}, categoryId=${categoryId}, sort=${sort})} : @{/products(page=${currentPage}, keyword=${keyword}, categoryId=${categoryId}, sort=${sort})}"
+                    th:classappend="${!productPage.hasNext()} ? ' disabled' : ''">Next</a>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>

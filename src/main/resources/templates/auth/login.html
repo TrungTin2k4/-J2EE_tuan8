@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{_layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="container py-5">
+        <div class="row justify-content-center g-4">
+            <div class="col-lg-5 col-md-7">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h2 class="mb-2">Đăng nhập</h2>
+                        <p class="text-muted mb-4">Đăng nhập để sử dụng chức năng của hệ thống.</p>
+
+                        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                        <div th:if="${param.error}" class="alert alert-danger">Sai tên đăng nhập hoặc mật khẩu.</div>
+                        <div th:if="${param.logout}" class="alert alert-info">Bạn đã đăng xuất thành công.</div>
+
+                        <form th:action="@{/login}" method="post" class="d-flex flex-column gap-3">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <div>
+                                <label for="username" class="form-label">Tên đăng nhập</label>
+                                <input type="text" id="username" name="username" class="form-control"
+                                    placeholder="Nhập tên đăng nhập" required>
+                            </div>
+                            <div>
+                                <label for="password" class="form-label">Mật khẩu</label>
+                                <input type="password" id="password" name="password" class="form-control"
+                                    placeholder="Nhập mật khẩu" required>
+                            </div>
+                            <button type="submit" class="btn btn-dark">Đăng nhập</button>
+                        </form>
+
+                        <div class="mt-3">
+                            Chưa có tài khoản?
+                            <a th:href="@{/register}" class="fw-semibold text-decoration-none">Đăng ký USER mới</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-5">
+                <div class="card border-0 bg-light shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <h4 class="mb-3">Tài khoản mẫu</h4>
+                        <div class="mb-3 pb-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>admin</strong>
+                                <span class="badge text-bg-danger">ADMIN</span>
+                            </div>
+                            <div>Mật khẩu: <code>admin123</code></div>
+                            <small class="text-muted">Có quyền quản lý sản phẩm, danh mục, và đặt hàng.</small>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>user</strong>
+                                <span class="badge text-bg-primary">USER</span>
+                            </div>
+                            <div>Mật khẩu: <code>123456</code></div>
+                            <small class="text-muted">Có quyền xem sản phẩm, thêm giỏ hàng và checkout.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
